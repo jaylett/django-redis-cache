@@ -60,7 +60,11 @@ class CacheClass(BaseCache):
         """
         Connect to Redis, and set up cache backend.
         """
+        self._init(server, params)
+
+    def _init(self, server, params):
         super(CacheClass, self).__init__(params)
+        self._initargs = { 'server': server, 'params': params }
         options = params.get('OPTIONS', {})
         password = params.get('password', options.get('PASSWORD', None))
         db = params.get('db', options.get('DB', 1))
@@ -80,6 +84,11 @@ class CacheClass(BaseCache):
         self._cache = redis.Redis(host=host, port=port, db=db,
             password=password, connection_pool=pool.get_connection_pool(host=host, port=port, db=db, password=password))
 
+    def __getstate__(self):
+        return self._initargs
+
+    def __setstate__(self, state):
+        self._init(**state)
 
     def make_key(self, key, version=None):
         """
